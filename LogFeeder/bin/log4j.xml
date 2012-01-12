@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<appender name="processErrorLogger_Appender" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="processErrorLogger.log" />
+		<param name="Append" value="true" />
+		<param name="MaxFileSize" value="10MB" />
+		<param name="MaxBackupIndex" value="10" />
+		<!--
+			<layout class="org.apache.log4j.PatternLayout"> <param
+			name="ConversionPattern" value="%d{yyyy-MM-dd hh:mm:ss} %-5p [%t] -
+			%C{1}.%M -> %m%n" /> </layout>
+		-->
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MMM-dd hh:mm:ss} [%-5p] %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="processOutputLogger_Appender" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="processOutputLogger.log" />
+		<param name="Append" value="true" />
+		<param name="MaxFileSize" value="10MB" />
+		<param name="MaxBackupIndex" value="10" />
+
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MMM-dd hh:mm:ss} [%-5p] %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="lineFeederSelfLogger_Appender" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="lineFeederSelfLogger.log" />
+		<param name="Append" value="true" />
+		<param name="MaxFileSize" value="10MB" />
+		<param name="MaxBackupIndex" value="10" />
+
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MMM-dd hh:mm:ss} [%-5p] %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="simpleLogFile_Appender" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="simpleLogFile.log" />
+		<param name="Append" value="true" />
+		<param name="MaxFileSize" value="10MB" />
+		<param name="MaxBackupIndex" value="10" />
+
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MMM-dd hh:mm:ss} [%-5p] %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="JDBCplus_Appender" class="org.apache.log4j.jdbcplus.JDBCAppender">
+		<!--
+		<param name="url" value="dbc:oracle:thin:@192.168.8.72:1521:mdelhi" />
+		-->
+		<param name="url" value="dbc:oracle:thin:@172.16.2.41:1521:orampls" />		
+		<param name="dbclass" value="oracle.jdbc.driver.OracleDriver" />
+		<param name="username" value="JISPBILCORBILLINGPRD501" />
+		<param name="password" value="JISPBILCORBILLINGPRD501" />
+		<!--
+			INSERT INTO LOGTEST (id, msg, cat, prio, the_timestamp, created_by)
+			VALUES (@INC@, '@MSG@', '@CAT@', '@PRIO@', CURRENT_TIMESTAMP,
+			'pure_logs')" />
+		-->
+		<param name="sql"
+			value="
+			Insert into TMPACCOUNTAUTHENTICATION
+			   (RADIUS_DATE, USERNAME, NAS_IDENTIFIER, NASPORTID, VMACID, 
+			    STATUS)
+			 values (
+			   SYSDATE 
+			            ,SUBSTR('@MSG@'
+			                ,INSTR ('@MSG@', 'Username=&quot;',1) + LENGTH('Username=&quot;') ,
+			                    INSTR ('@MSG@', '&quot;',INSTR ('@MSG@', 'Username=&quot;',1)+LENGTH('Username=&quot;'))
+			                    - INSTR ('@MSG@', 'Username=&quot;',1)
+			                     -  LENGTH('Username=&quot;')
+			                )          
+			            ,SUBSTR('@MSG@'
+			                ,INSTR ('@MSG@', 'NAS-Identifier=&quot;',1) + LENGTH('NAS-Identifier=&quot;') ,
+			                    INSTR ('@MSG@', '&quot;',INSTR ('@MSG@', 'NAS-Identifier=&quot;',1)+LENGTH('NAS-Identifier=&quot;'))
+			                    - INSTR ('@MSG@', 'NAS-Identifier=&quot;',1)
+			                     -  LENGTH('NAS-Identifier=&quot;')
+			                ) 
+			             ,SUBSTR('@MSG@'
+			                ,INSTR ('@MSG@', 'NAS-Port-Id=&quot;',1) + LENGTH('NAS-Port-Id=&quot;') ,
+			                    INSTR ('@MSG@', '&quot;',INSTR ('@MSG@', 'NAS-Port-Id=&quot;',1)+LENGTH('NAS-Port-Id=&quot;'))
+			                    - INSTR ('@MSG@', 'NAS-Port-Id=&quot;',1)
+			                     -  LENGTH('NAS-Port-Id=&quot;')
+			                ) 
+			              , NULL  
+			              ,  DECODE (
+			                    INSTR ('@MSG@','ACCESS_ACCEPT')
+			                    ,0 , TRIM (SUBSTR('@MSG@'
+			                        ,INSTR ('@MSG@', '[ REASON :',1) + LENGTH('[ REASON :') ,
+			                            INSTR ('@MSG@', ']',INSTR ('@MSG@', '[ REASON :',1)+LENGTH('[ REASON :'))
+			                            - INSTR ('@MSG@', '[ REASON :',1)
+			                             -  LENGTH('[ REASON :')
+			                        )),'Success') 
+			  )" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%m" />
+		</layout>
+		<filter class="org.apache.log4j.varia.StringMatchFilter">
+			<param name="StringToMatch" value="Auth Response for Username" />
+			<param name="AcceptOnMatch" value="true" />
+		</filter>
+		<!--
+			<filter class="org.apache.log4j.varia.StringMatchFilter"> <param
+			name="StringToMatch" value="Response" /> <param name="AcceptOnMatch"
+			value="true" /> </filter> <filter
+			class="org.apache.log4j.varia.StringMatchFilter"> <param
+			name="StringToMatch" value="for" /> <param name="AcceptOnMatch"
+			value="true" /> </filter>
+		-->
+		<filter class="org.apache.log4j.varia.DenyAllFilter" />
+
+	</appender>
+
+	<appender name="ElitecoreSmtp_Appender" class="org.apache.log4j.net.SMTPAppender">
+		<param name="BufferSize" value="256" /> <!-- no of statements to buffer -->
+		<param name="Threshold" value="DEBUG" /> <!-- buffered log statement level -->
+		<param name="SMTPHost" value="203.88.135.194" />
+		<param name="From" value="dhruv.gohil@elitecore.com" />
+		<param name="To"
+			value="dhruv.gohil@elitecore.com,sandhya.rai@elitecore.com" />
+		<param name="Subject" value="logmsg[ClientName][ServerId]Jboss" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%d{ISO8601}]%-5p %c %m%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.StringMatchFilter">
+			<!--
+				<param name="StringToMatch" value="Auth Response for Username" />
+			-->
+			<param name="StringToMatch" value="get external properties received" />
+			<param name="AcceptOnMatch" value="true" />
+		</filter>
+		<!--
+			<filter class="org.apache.log4j.varia.StringMatchFilter"> <param
+			name="StringToMatch" value="Response" /> <param name="AcceptOnMatch"
+			value="true" /> </filter> <filter
+			class="org.apache.log4j.varia.StringMatchFilter"> <param
+			name="StringToMatch" value="for" /> <param name="AcceptOnMatch"
+			value="true" /> </filter>
+		-->
+		<filter class="org.apache.log4j.varia.DenyAllFilter" />
+	</appender>
+
+	<appender name="ConsoleAppender" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="%d{yyyy-MM-dd hh:mm:ss} %-5p [%t] - %C{1}.%M -> %m" />
+		</layout>
+	</appender>
+
+
+
+	<category name="processErrorLogger" additivity="false">
+		<priority value="DEBUG" />
+		<appender-ref ref="processErrorLogger_Appender" />
+	</category>
+
+	<category name="processOutputLogger" additivity="false">
+		<priority value="INFO" />
+		<appender-ref ref="JDBCplus_Appender" />
+	</category>
+
+	<category name="lineFeederSelfLogger" additivity="false">
+		<priority value="ALL" />
+		<appender-ref ref="lineFeederSelfLogger_Appender" />
+	</category>
+
+	<root>
+		<level value="ALL" />
+		<appender-ref ref="simpleLogFile_Appender" />
+		<!--     <appender-ref ref="ConsoleAppender" />  -->
+	</root>
+
+
+</log4j:configuration>
